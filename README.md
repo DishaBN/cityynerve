@@ -140,8 +140,4 @@ Contributions are welcome. Suggested next improvements:
 - Replace SHA-256 password hashing with `werkzeug.security` or `bcrypt`.
 - Add unit tests and CI configuration.
 
-If you'd like, I can create `requirements.txt`, a `.env` loader, or a `Dockerfile` next — tell me which and I'll add it.
 
-## License
-
-MIT
