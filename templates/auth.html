@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}CityNerve Lite – Sign In{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .main-container {
+        margin-top: 0 !important;
+    }
+
+    .auth-wrapper {
+        min-height: calc(100vh - 60px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        margin-left: 0 !important;
+        width: 100% !important;
+        background: linear-gradient(135deg, var(--darker-bg) 0%, #1a1f3a 50%, var(--dark-bg) 100%);
+    }
+
+    .auth-form {
+        max-width: 420px;
+        width: 100%;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .auth-title {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .nav-tabs {
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+    }
+
+    .nav-tabs .nav-link {
+        color: var(--text-secondary) !important;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        border-bottom: 2px solid transparent;
+    }
+
+    .nav-tabs .nav-link:hover {
+        border-bottom-color: var(--primary);
+        color: var(--primary) !important;
+    }
+
+    .nav-tabs .nav-link.active {
+        background: none;
+        border-bottom-color: var(--primary);
+        color: var(--primary) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-form">
+        <div class="auth-header">
+            <h1 class="auth-title">🌍 CityNerve Lite</h1>
+            <p class="auth-subtitle">Smart City Analytics Platform</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login" type="button" role="tab">
+                    Login
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="signup-tab" data-bs-toggle="tab" data-bs-target="#signup" type="button" role="tab">
+                    Create Account
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- Login Tab -->
+            <div class="tab-pane fade show active" id="login" role="tabpanel">
+                <form method="POST" action="/auth">
+                    <input type="hidden" name="action" value="login">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                </form>
+            </div>
+
+            <!-- Signup Tab -->
+            <div class="tab-pane fade" id="signup" role="tabpanel">
+                <form method="POST" action="/auth">
+                    <input type="hidden" name="action" value="signup">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                        <small class="text-muted">We'll never share your email</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" name="username" placeholder="3-20 characters" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" placeholder="Min 6 characters" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100">Create Account</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary); font-size: 0.875rem;">
+            <p>By signing in, you agree to our terms of service and privacy policy</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

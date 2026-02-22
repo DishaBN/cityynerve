@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}CityNerve Lite – Analytics & Feedback{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-box {
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-name {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .table {
+        color: var(--text-primary);
+        margin-bottom: 0;
+    }
+
+    .table thead {
+        border-bottom: 1.5px solid var(--border-color);
+    }
+
+    .table thead th {
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
+        font-weight: 700;
+        padding: 1rem;
+        border: none;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .table tbody tr:hover {
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .badge {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border-radius: 4px;
+    }
+
+    .badge-success {
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--accent);
+    }
+
+    .badge-warning {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+    }
+
+    .badge-danger {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fecaca;
+    }
+
+    .rating-cell {
+        font-weight: 700;
+        min-width: 50px;
+        text-align: center;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-input {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .table {
+            font-size: 0.85rem;
+        }
+
+        .table thead th,
+        .table tbody td {
+            padding: 0.5rem;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+        }
+
+        .filter-input {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">📊 Community Analytics</h1>
+    <p class="page-subtitle">Real-time feedback insights and trends</p>
+</div>
+
+<!-- Stats Overview -->
+<div class="card">
+    <div class="card-body">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-name">Total Submissions</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="citiesCount">0</div>
+                <div class="stat-name">Cities Rated</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="avgScore">0.0</div>
+                <div class="stat-name">Average Rating</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="latest">—</div>
+                <div class="stat-name">Latest Entry</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Feedback Table -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h5 class="mb-0">📋 Recent Feedback Submissions</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>City</th>
+                        <th>Traffic</th>
+                        <th>Pollution</th>
+                        <th>Cost</th>
+                        <th>Safety</th>
+                        <th>Water</th>
+                        <th>Health</th>
+                        <th>Heat</th>
+                        <th>Response</th>
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody id="feedbackTable">
+                    {% if feedback %}
+                        {% for row in feedback %}
+                        <tr>
+                            <td><strong>{{ row[1] }}</strong></td>
+                            <td class="rating-cell">{{ row[2] }}</td>
+                            <td class="rating-cell">{{ row[3] }}</td>
+                            <td class="rating-cell">{{ row[4] }}</td>
+                            <td class="rating-cell">{{ row[5] }}</td>
+                            <td class="rating-cell">{{ row[6] }}</td>
+                            <td class="rating-cell">{{ row[7] }}</td>
+                            <td class="rating-cell">{{ row[8] }}</td>
+                            <td class="rating-cell">{{ row[9] }}</td>
+                            <td style="font-size: 0.85rem; color: var(--text-secondary);">
+                                {% if row[11] %}
+                                    {{ row[11] }}
+                                {% else %}
+                                    Recently
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                                No feedback submissions yet. Encourage users to submit ratings!
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Info Card -->
+<div class="card" style="margin-top: 2rem;">
+    <div class="card-body">
+        <h5 class="mb-3">ℹ️ About This Dashboard</h5>
+        <p class="mb-2">
+            This analytics page displays real-time community feedback across all monitored cities. 
+            Each submission includes ratings on 9 key parameters that contribute to urban liveability.
+        </p>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+            <strong>Last Updated:</strong> <span id="lastUpdated">Just now</span>
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function updateStats() {
+        const rows = document.querySelectorAll('#feedbackTable tr');
+        const count = rows.length;
+        
+        if (count === 0) return;
+
+        const cities = new Set();
+        let totalScore = 0;
+        let scoreCount = 0;
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const city = cells[0].textContent;
+            cities.add(city);
+
+            // Calculate average rating for this submission
+            let score = 0;
+            for (let i = 1; i <= 9; i++) {
+                score += parseInt(cells[i].textContent) || 0;
+            }
+            totalScore += score / 9;
+            scoreCount++;
+        });
+
+        document.getElementById('totalCount').textContent = count;
+        document.getElementById('citiesCount').textContent = cities.size;
+        document.getElementById('avgScore').textContent = (totalScore / scoreCount).toFixed(1);
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+    }
+
+    document.addEventListener('DOMContentLoaded', updateStats);
+    setInterval(updateStats, 30000); // Update every 30 seconds
+</script>
+{% endblock %}

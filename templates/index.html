@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}CityNerve Lite – Home{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.0.1/leaflet-heat.min.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.0.1/leaflet-heat.js"></script>
+
+<style>
+    .hero-section {
+        padding: 3rem 0 4rem;
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    .search-box {
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+
+    .search-input {
+        position: relative;
+    }
+
+    #citySearch {
+        font-size: 1.1rem;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+    }
+
+    .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(26, 31, 53, 0.95);
+        border: 1.5px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 12px 12px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 100;
+        display: none;
+    }
+
+    .autocomplete-dropdown.show {
+        display: block;
+    }
+
+    .autocomplete-item {
+        padding: 1rem 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .autocomplete-item:hover {
+        background: rgba(139, 92, 246, 0.1);
+    }
+
+    .cities-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .city-card {
+        display: flex;
+        flex-direction: column;
+        text-decoration: none;
+    }
+
+    .city-card .card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .city-card:hover .card {
+        border-color: rgba(139, 92, 246, 0.6);
+    }
+
+    .city-score {
+        font-size: 2rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .city-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .city-info {
+        flex: 1;
+    }
+
+    .city-stat {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .card-footer {
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .map-section {
+        margin-top: 3rem;
+    }
+
+    .map-container {
+        position: relative;
+        height: 500px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1.5px solid var(--border-color);
+    }
+
+    #map {
+        width: 100%;
+        height: 100%;
+    }
+
+    .ranking-section {
+        margin-top: 3rem;
+    }
+
+    .ranking-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .ranking-list {
+        list-style: none;
+    }
+
+    .ranking-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(26, 31, 53, 0.5);
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        border-left: 3px solid var(--primary);
+    }
+
+    .ranking-rank {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        min-width: 30px;
+    }
+
+    .ranking-name {
+        flex: 1;
+        margin: 0 1rem;
+        font-weight: 600;
+    }
+
+    .ranking-score {
+        font-size: 1.25rem;
+        font-weight: 900;
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h1 class="hero-title">🌍 Monitor Your City</h1>
+    <p class="hero-subtitle">Real-time air quality, citizen feedback & liveability scores</p>
+
+    <div class="search-box">
+        <div class="search-input">
+            <input type="text" class="form-control" id="citySearch" placeholder="🔍 Search a city...">
+            <div class="autocomplete-dropdown" id="autocomplete"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Cities -->
+<div>
+    <h2 style="margin-bottom: 2rem; font-weight: 700;">Featured Cities</h2>
+    <div class="cities-grid" id="citiesGrid"></div>
+</div>
+
+<!-- Map -->
+<div class="map-section">
+    <h2 style="margin-bottom: 1.5rem; font-weight: 700;">📍 Distribution Heatmap</h2>
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+</div>
+
+<!-- Rankings -->
+<div class="ranking-section">
+    <h2 class="ranking-title">🏆 Top Rated Cities</h2>
+    <ul class="ranking-list" id="rankings"></ul>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const cities = {{ cities | tojson }};
+    let map;
+
+    // Render City Cards
+    function renderCities() {
+        const grid = document.getElementById('citiesGrid');
+        const sorted = Object.entries(cities)
+            .slice(0, 6)
+            .map(([name, data]) => ({name, ...data}));
+
+        grid.innerHTML = sorted.map(city => `
+            <a href="/view/${city.name}" class="city-card">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="city-score">${(Math.random() * 80 + 20).toFixed(1)}</div>
+                        <div class="city-name">${city.name}</div>
+                        <div class="city-info">
+                            <div class="city-stat">📍 Lat: ${city.lat.toFixed(2)}, Lon: ${city.lon.toFixed(2)}</div>
+                            <div class="city-stat">🌡️ Climate: ${city.base.heat}/10</div>
+                            <div class="city-stat">🚗 Traffic: ${city.base.traffic}/10</div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-sm btn-primary w-100">View Details →</button>
+                    </div>
+                </div>
+            </a>
+        `).join('');
+    }
+
+    // Search & Autocomplete
+    document.getElementById('citySearch').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const autocomplete = document.getElementById('autocomplete');
+        
+        if (!query) {
+            autocomplete.classList.remove('show');
+            return;
+        }
+
+        const matches = Object.keys(cities).filter(c => c.toLowerCase().includes(query));
+        autocomplete.innerHTML = matches.map(city => `
+            <div class="autocomplete-item" onclick="window.location.href='/view/${city}'">
+                📍 ${city}
+            </div>
+        `).join('');
+        
+        autocomplete.classList.toggle('show', matches.length > 0);
+    });
+
+    // Initialize Map with Heatmap
+    function initMap() {
+        map = L.map('map').setView([15, 76], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap',
+            maxZoom: 19
+        }).addTo(map);
+
+        fetch('/api/heat')
+            .then(r => r.json())
+            .then(data => {
+                // Add heatmap layer
+                const heat = L.heatLayer(data.points, {
+                    radius: 40,
+                    blur: 25,
+                    maxZoom: 17,
+                    max: 1,
+                    gradient: {
+                        0: '#34d399',
+                        0.5: '#60a5fa',
+                        1: '#8b5cf6'
+                    }
+                }).addTo(map);
+
+                // Render rankings
+                renderRankings(data.ranked);
+            });
+    }
+
+    // Render Rankings
+    function renderRankings(ranked) {
+        const list = document.getElementById('rankings');
+        list.innerHTML = ranked.slice(0, 10).map((item, idx) => `
+            <li class="ranking-item">
+                <span class="ranking-rank">#${idx + 1}</span>
+                <a href="/view/${item.city}" style="text-decoration: none; color: inherit;">
+                    <span class="ranking-name">${item.city}</span>
+                </a>
+                <span class="ranking-score">${item.score.toFixed(1)}</span>
+            </li>
+        `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCities();
+        initMap();
+    });
+</script>
+{% endblock %}

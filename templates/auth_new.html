@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>Access 2080 • AI Command Center</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --secondary: #60a5fa;
+            --accent: #34d399;
+            --danger: #ef4444;
+            --success: #10b981;
+            --text-primary: #e0e7ff;
+            --text-secondary: #94a3b8;
+            --glow: rgba(139, 92, 246, 0.5);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: radial-gradient(circle, var(--primary), rgba(139, 92, 246, 0.1));
+            border-radius: 50%;
+            animation: float linear infinite;
+            box-shadow: 0 0 10px var(--glow);
+        }
+
+        @keyframes float {
+            to {
+                transform: translateY(-100vh) translateX(var(--tx));
+                opacity: 0;
+            }
+        }
+
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            max-width: 440px;
+            width: 100%;
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(60px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(30, 27, 59, 0.7));
+            border: 1.5px solid rgba(139, 92, 246, 0.3);
+            border-radius: 24px;
+            padding: 48px 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-logo {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .auth-title {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            background: rgba(15, 23, 41, 0.4);
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 8px 20px var(--glow);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .form-label {
+            position: absolute;
+            top: 14px;
+            left: 16px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px;
+            padding-top: 28px;
+            background: rgba(15, 23, 41, 0.6);
+            border: 1.5px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            outline: none;
+            font-weight: 500;
+        }
+
+        .form-input:focus {
+            background: rgba(15, 23, 41, 0.9);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), inset 0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .form-input.filled ~ .form-label,
+        .form-input:focus ~ .form-label {
+            top: 6px;
+            font-size: 11px;
+            color: var(--primary-light);
+        }
+
+        .form-input.error {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .form-input.success {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .form-message {
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .form-message.error {
+            color: var(--danger);
+            display: block;
+        }
+
+        .form-message.success {
+            color: var(--success);
+            display: block;
+        }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 24px;
+            display: none;
+            font-weight: 600;
+            animation: shake 0.3s ease;
+        }
+
+        .error-box.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px var(--glow);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .divider {
+            text-align: center;
+            margin: 28px 0;
+            position: relative;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(139, 92, 246, 0.2);
+            z-index: -1;
+        }
+
+        .divider span {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+            padding: 0 12px;
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 32px 24px;
+            }
+
+            .auth-title {
+                font-size: 24px;
+            }
+
+            .form-input {
+                padding: 14px 12px;
+                padding-top: 26px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="particles"></div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">⚡</div>
+            <h1 class="auth-title">Access 2080</h1>
+            <p class="auth-subtitle">AI Command Center</p>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="login">Login</button>
+                <button class="tab-btn" data-tab="signup">Create Account</button>
+            </div>
+
+            <!-- Login Form -->
+            <form class="form-container active" id="loginForm" method="POST">
+                <input type="hidden" name="action" value="login">
+                
+                <div class="error-box" id="loginError"></div>
+
+                <div class="form-group">
+                    <input type="text" class="form-input" name="username" id="loginUsername" required>
+                    <label class="form-label">Username</label>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" class="form-input" name="password" id="loginPassword" required>
+                    <label class="form-label">Password</label>
+                </div>
+
+                <button type="submit" class="submit-btn">🔓 Login</button>
+            </form>
+
+            <!-- Signup Form -->
+            <form class="form-container" id="signupForm" method="POST">
+                <input type="hidden" name="action" value="signup">
+                
+                <div class="error-box" id="signupError"></div>
+
+                <div class="form-group">
+                    <input type="email" class="form-input" name="email" id="signupEmail" required>
+                    <label class="form-label">Email Address</label>
+                    <div class="form-message" id="emailMsg"></div>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" class="form-input" name="username" id="signupUsername" required>
+                    <label class="form-label">Username</label>
+                    <div class="form-message" id="usernameMsg"></div>
+                </div>
+
+                <div class="form-group">
+                    <input type="password" class="form-input" name="password" id="signupPassword" required>
+                    <label class="form-label">Password</label>
+                    <div class="form-message" id="passwordMsg"></div>
+                </div>
+
+                <button type="submit" class="submit-btn">📝 Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Particles
+        function createParticles() {
+            const container = document.querySelector('.particles');
+            const colors = ['#8b5cf6', '#60a5fa', '#34d399', '#fbbf24'];
+            
+            for (let i = 0; i < 40; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const size = Math.random() * 4 + 2;
+                const duration = Math.random() * 22 + 18;
+                const tx = (Math.random() - 0.5) * 140;
+                
+                particle.style.cssText = `
+                    left: ${x}px;
+                    top: ${y}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    --tx: ${tx}px;
+                    animation-duration: ${duration}s;
+                    animation-delay: ${Math.random() * 6}s;
+                    background: radial-gradient(circle, ${colors[Math.floor(Math.random() * colors.length)]}, rgba(139, 92, 246, 0.1));
+                `;
+                container.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const tab = btn.getAttribute('data-tab');
+                document.getElementById(tab + 'Form').classList.add('active');
+            });
+        });
+
+        // Floating Labels
+        document.querySelectorAll('.form-input').forEach(input => {
+            input.addEventListener('input', (e) => {
+                e.target.classList.toggle('filled', e.target.value.length > 0);
+            });
+            
+            if (input.value) {
+                input.classList.add('filled');
+            }
+        });
+
+        // Form Submission
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            fetch('/auth', {
+                method: 'POST',
+                body: formData
+            }).then(r => {
+                if (r.ok) r.text().then(() => location.href = '/dashboard');
+                else r.text().then(html => {
+                    const error = html.match(/error="([^"]+)"/)?.[1] || 'Login failed';
+                    document.getElementById('loginError').textContent = error;
+                    document.getElementById('loginError').classList.add('show');
+                });
+            });
+        });
+
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            
+            fetch('/auth', {
+                method: 'POST',
+                body: formData
+            }).then(r => {
+                if (r.ok) r.text().then(() => location.href = '/dashboard');
+                else r.text().then(html => {
+                    const error = html.match(/error="([^"]+)"/)?.[1] || 'Signup failed';
+                    document.getElementById('signupError').textContent = error;
+                    document.getElementById('signupError').classList.add('show');
+                });
+            });
+        });
+
+        // Show server errors if present
+        const errorMsg = document.documentElement.getAttribute('data-error');
+        if (errorMsg) {
+            document.getElementById('loginError').textContent = errorMsg;
+            document.getElementById('loginError').classList.add('show');
+        }
+    </script>
+</body>
+</html>

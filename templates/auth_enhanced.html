@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <title>Access 2080 • AI Command Center</title>
+
+    <style>
+        /* ========================================
+           DESIGN SYSTEM
+           ======================================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --secondary: #60a5fa;
+            --accent: #34d399;
+            --danger: #ef4444;
+            --success: #10b981;
+            --dark-bg: #0a0e27;
+            --dark-surface: #1a1f3a;
+            --dark-card: #0f1729;
+            --border-light: rgba(139, 92, 246, 0.2);
+            --text-primary: #e0e7ff;
+            --text-secondary: #94a3b8;
+            --glow: rgba(139, 92, 246, 0.5);
+        }
+
+        /* ========================================
+           BODY & BACKGROUND
+           ======================================== */
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.1) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                background: 
+                    radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 80% 80%, rgba(96, 165, 250, 0.1) 0%, transparent 50%);
+            }
+            50% {
+                background: 
+                    radial-gradient(circle at 80% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                    radial-gradient(circle at 20% 80%, rgba(96, 165, 250, 0.1) 0%, transparent 50%);
+            }
+        }
+
+        /* ========================================
+           MAIN CONTAINER
+           ======================================== */
+        .auth-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 480px;
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ========================================
+           GLASSMORPHIC CARD
+           ======================================== */
+        .auth-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(30, 27, 59, 0.55));
+            border: 1px solid var(--border-light);
+            border-radius: 28px;
+            padding: 56px 44px;
+            backdrop-filter: blur(25px);
+            box-shadow: 
+                0 25px 70px rgba(0, 0, 0, 0.45),
+                inset 0 1px 1px rgba(255, 255, 255, 0.12),
+                0 0 50px var(--glow);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent);
+            animation: orb 25s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes orb {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========================================
+           HEADER
+           ======================================== */
+        .auth-header {
+            text-align: center;
+            margin-bottom: 44px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-logo {
+            font-size: 56px;
+            margin-bottom: 20px;
+            animation: float 3.5s ease-in-out infinite;
+            filter: drop-shadow(0 0 15px rgba(167, 139, 250, 0.4));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        .auth-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.8px;
+        }
+
+        .auth-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            font-weight: 700;
+        }
+
+        /* ========================================
+           FORM
+           ======================================== */
+        .auth-form {
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-group {
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(15, 23, 41, 0.65);
+            border: 1.5px solid var(--border-light);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+            font-weight: 500;
+        }
+
+        .auth-input::placeholder {
+            color: transparent;
+        }
+
+        .auth-input:focus {
+            background: rgba(15, 23, 41, 0.95);
+            border-color: var(--primary);
+            box-shadow: 
+                0 0 35px var(--glow),
+                inset 0 0 25px rgba(139, 92, 246, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .auth-input:valid {
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
+        .input-label {
+            position: absolute;
+            left: 20px;
+            top: 18px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: left center;
+        }
+
+        .auth-input:focus + .input-label,
+        .auth-input:not(:placeholder-shown) + .input-label {
+            top: -8px;
+            left: 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #0a0e27, #1a1f3a);
+            padding: 0 8px;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 8px;
+            transition: all 0.3s ease;
+            z-index: 3;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-light);
+            transform: scale(1.1);
+        }
+
+        /* Validation Indicators */
+        .input-success {
+            border-color: var(--success) !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .input-error {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .validation-message {
+            font-size: 12px;
+            margin-top: 8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .validation-message.error {
+            color: var(--danger);
+            opacity: 1;
+        }
+
+        .validation-message.success {
+            color: var(--success);
+            opacity: 1;
+        }
+
+        /* ========================================
+           PASSWORD STRENGTH
+           ======================================== */
+        .strength-container {
+            margin-top: 12px;
+            display: none;
+        }
+
+        .strength-bars {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .strength-bar {
+            flex: 1;
+            height: 3px;
+            background: rgba(139, 92, 246, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #eab308, #10b981, #06b6d4);
+            border-radius: 2px;
+            transition: all 0.4s ease;
+        }
+
+        .strength-text {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        /* ========================================
+           BUTTONS
+           ======================================== */
+        .auth-button {
+            width: 100%;
+            padding: 16px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left 0.4s ease;
+            z-index: -1;
+        }
+
+        .auth-button:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .auth-submit {
+            background: linear-gradient(135deg, #8b5cf6, #60a5fa);
+            color: white;
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.35);
+        }
+
+        .auth-submit:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 50px rgba(139, 92, 246, 0.5);
+        }
+
+        .auth-submit:active:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        .auth-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-submit.loading {
+            position: relative;
+        }
+
+        .auth-submit.loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            right: 20px;
+            margin-top: -8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tab Navigation */
+        .auth-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 36px;
+            background: rgba(15, 23, 41, 0.5);
+            border-radius: 14px;
+            padding: 6px;
+            border: 1px solid var(--border-light);
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .auth-tab.active {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(96, 165, 250, 0.2));
+            color: var(--primary-light);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        /* ========================================
+           SUCCESS STATE
+           ======================================== */
+        .success-card {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            display: none;
+            animation: scaleIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .success-card.show {
+            display: block;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .success-icon {
+            font-size: 72px;
+            margin-bottom: 24px;
+            animation: bounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes bounce {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .success-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .success-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .home-button {
+            display: inline-block;
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #8b5cf6, #60a5fa);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1.2px;
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.35);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .home-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 18px 50px rgba(139, 92, 246, 0.5);
+        }
+
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (max-width: 540px) {
+            .auth-card {
+                padding: 40px 28px;
+                border-radius: 24px;
+            }
+
+            .auth-title {
+                font-size: 26px;
+            }
+
+            .auth-logo {
+                font-size: 48px;
+            }
+
+            .form-group {
+                margin-bottom: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">🌐</div>
+                <h1 class="auth-title">2080</h1>
+                <p class="auth-subtitle">AI Command Center</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="signup">Sign Up</button>
+            </div>
+
+            <!-- Login Form -->
+            <form class="auth-form" id="loginForm">
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input 
+                            type="email" 
+                            class="auth-input" 
+                            id="loginEmail" 
+                            placeholder="E-mail"
+                            pattern="[^\s@]+@[^\s@]+"
+                            required
+                        >
+                        <label class="input-label" for="loginEmail">E-mail Address</label>
+                    </div>
+                    <div class="validation-message" id="loginEmailMsg"></div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            class="auth-input" 
+                            id="loginPassword" 
+                            placeholder="Password"
+                            required
+                        >
+                        <button type="button" class="password-toggle" id="loginToggle">👁️</button>
+                        <label class="input-label" for="loginPassword">Password</label>
+                    </div>
+                    <div class="validation-message" id="loginPasswordMsg"></div>
+                </div>
+
+                <button type="submit" class="auth-button auth-submit" id="loginBtn">Login</button>
+                <p style="text-align: center; margin-top: 20px; font-size: 13px; color: var(--text-secondary);">
+                    Demo: Use any email/password • No authentication required
+                </p>
+            </form>
+
+            <!-- Signup Form -->
+            <form class="auth-form" id="signupForm" style="display: none;">
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input 
+                            type="text" 
+                            class="auth-input" 
+                            id="signupUsername" 
+                            placeholder="Username"
+                            pattern="[a-zA-Z0-9_]{3,20}"
+                            required
+                        >
+                        <label class="input-label" for="signupUsername">Username</label>
+                    </div>
+                    <div class="validation-message" id="signupUsernameMsg"></div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input 
+                            type="email" 
+                            class="auth-input" 
+                            id="signupEmail" 
+                            placeholder="E-mail"
+                            pattern="[^\s@]+@[^\s@]+"
+                            required
+                        >
+                        <label class="input-label" for="signupEmail">E-mail Address</label>
+                    </div>
+                    <div class="validation-message" id="signupEmailMsg"></div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            class="auth-input" 
+                            id="signupPassword" 
+                            placeholder="Password"
+                            pattern=".{8,}"
+                            title="Minimum 8 characters"
+                            required
+                        >
+                        <button type="button" class="password-toggle" id="signupToggle">👁️</button>
+                        <label class="input-label" for="signupPassword">Password</label>
+                    </div>
+                    <div class="validation-message" id="signupPasswordMsg"></div>
+                    <div class="strength-container" id="strengthContainer">
+                        <div class="strength-bars">
+                            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                        </div>
+                        <div class="strength-text" id="strengthText"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-button auth-submit" id="signupBtn">Create Account</button>
+            </form>
+
+            <!-- Success State -->
+            <div class="success-card" id="successCard">
+                <div class="success-icon">✨</div>
+                <h2 class="success-title">Welcome to 2080</h2>
+                <p class="success-message">Your authentication is confirmed.<br>Prepare for the future of urban intelligence.</p>
+                <a href="/" class="home-button">Explore Now</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // UI ELEMENTS
+        // ========================================
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const successCard = document.getElementById('successCard');
+        const tabs = document.querySelectorAll('.auth-tab');
+
+        const loginEmail = document.getElementById('loginEmail');
+        const loginPassword = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginToggle = document.getElementById('loginToggle');
+
+        const signupUsername = document.getElementById('signupUsername');
+        const signupEmail = document.getElementById('signupEmail');
+        const signupPassword = document.getElementById('signupPassword');
+        const signupBtn = document.getElementById('signupBtn');
+        const signupToggle = document.getElementById('signupToggle');
+        const strengthContainer = document.getElementById('strengthContainer');
+        const strengthFill = document.getElementById('strengthFill');
+        const strengthText = document.getElementById('strengthText');
+
+        // ========================================
+        // VALIDATORS
+        // ========================================
+        const validators = {
+            email: (value) => {
+                const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return {
+                    valid: regex.test(value),
+                    msg: regex.test(value) ? '✓ Valid email' : '✗ Invalid email format'
+                };
+            },
+            password: (value) => {
+                let strength = 0;
+                if (value.length >= 8) strength++;
+                if (value.length >= 12) strength++;
+                if (/[a-z]/.test(value) && /[A-Z]/.test(value)) strength++;
+                if (/[0-9]/.test(value)) strength++;
+                if (/[^a-zA-Z0-9]/.test(value)) strength++;
+
+                return {
+                    valid: value.length >= 8,
+                    msg: value.length >= 8 ? '✓ Strong password' : `✗ ${8 - value.length} more characters needed`,
+                    strength: strength
+                };
+            },
+            username: (value) => {
+                const regex = /^[a-zA-Z0-9_]{3,20}$/;
+                return {
+                    valid: regex.test(value),
+                    msg: regex.test(value) ? '✓ Valid username' : '✗ 3-20 alphanumeric/underscore only'
+                };
+            }
+        };
+
+        // ========================================
+        // TAB SWITCHING
+        // ========================================
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                if (tabName === 'login') {
+                    loginForm.style.display = 'block';
+                    signupForm.style.display = 'none';
+                } else {
+                    loginForm.style.display = 'none';
+                    signupForm.style.display = 'block';
+                }
+            });
+        });
+
+        // ========================================
+        // VALIDATION
+        // ========================================
+        function validateField(input, type, msgId) {
+            const result = validators[type](input.value);
+            const msgElement = document.getElementById(msgId);
+
+            input.classList.remove('input-valid', 'input-error');
+            msgElement.classList.remove('success', 'error');
+
+            if (input.value === '') {
+                msgElement.textContent = '';
+                msgElement.classList.remove('success', 'error');
+            } else if (result.valid) {
+                input.classList.add('input-valid');
+                msgElement.textContent = result.msg;
+                msgElement.classList.add('success');
+            } else {
+                input.classList.add('input-error');
+                msgElement.textContent = result.msg;
+                msgElement.classList.add('error');
+            }
+
+            if (type === 'password') {
+                updatePasswordStrength(result.strength);
+            }
+
+            return result.valid && input.value !== '';
+        }
+
+        function updatePasswordStrength(strength) {
+            const percentages = [0, 20, 40, 60, 80, 100];
+            const colors = ['transparent', '#ef4444', '#f59e0b', '#eab308', '#10b981', '#06b6d4'];
+            
+            strengthContainer.style.display = 'block';
+            strengthFill.style.width = percentages[strength] + '%';
+            strengthFill.style.background = colors[strength];
+            strengthText.textContent = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent'][strength];
+            strengthText.style.color = colors[strength];
+        }
+
+        // ========================================
+        // PASSWORD TOGGLE
+        // ========================================
+        [loginToggle, signupToggle].forEach((toggle, index) => {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const input = index === 0 ? loginPassword : signupPassword;
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                this.textContent = isPassword ? '🙈' : '👁️';
+            });
+        });
+
+        // ========================================
+        // REAL-TIME VALIDATION
+        // ========================================
+        loginEmail.addEventListener('input', () => validateField(loginEmail, 'email', 'loginEmailMsg'));
+        loginPassword.addEventListener('input', () => validateField(loginPassword, 'password', 'loginPasswordMsg'));
+
+        signupUsername.addEventListener('input', () => validateField(signupUsername, 'username', 'signupUsernameMsg'));
+        signupEmail.addEventListener('input', () => validateField(signupEmail, 'email', 'signupEmailMsg'));
+        signupPassword.addEventListener('input', () => validateField(signupPassword, 'password', 'signupPasswordMsg'));
+
+        // ========================================
+        // FORM SUBMISSION
+        // ========================================
+        [loginForm, signupForm].forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const submitBtn = form.id === 'loginForm' ? loginBtn : signupBtn;
+
+                // Validate all fields
+                let isValid = true;
+                if (form.id === 'loginForm') {
+                    isValid = validateField(loginEmail, 'email', 'loginEmailMsg') &&
+                              validateField(loginPassword, 'password', 'loginPasswordMsg');
+                } else {
+                    isValid = validateField(signupUsername, 'username', 'signupUsernameMsg') &&
+                              validateField(signupEmail, 'email', 'signupEmailMsg') &&
+                              validateField(signupPassword, 'password', 'signupPasswordMsg');
+                }
+
+                if (!isValid) return;
+
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+
+                // Simulate API delay
+                await new Promise(resolve => setTimeout(resolve, 1200));
+
+                // Store auth state
+                localStorage.setItem('authToken', JSON.stringify({
+                    timestamp: new Date().toISOString(),
+                    authenticated: true
+                }));
+
+                // Show success
+                form.style.display = 'none';
+                document.querySelector('.auth-header').style.display = 'none';
+                document.querySelector('.auth-tabs').style.display = 'none';
+                successCard.classList.add('show');
+
+                submitBtn.classList.remove('loading');
+            });
+        });
+
+        // ========================================
+        // INIT
+        // ========================================
+        if (localStorage.getItem('authToken')) {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'none';
+            document.querySelector('.auth-header').style.display = 'none';
+            document.querySelector('.auth-tabs').style.display = 'none';
+            successCard.classList.add('show');
+        }
+    </script>
+</body>
+</html>

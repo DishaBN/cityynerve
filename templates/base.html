@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}CityNerve Lite{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+      :root{--primary:#8b5cf6;--secondary:#60a5fa;--accent:#34d399;--text-primary:#e0e7ff;--text-secondary:#94a3b8;--border-color:rgba(139,92,246,0.2)}
+      *{box-sizing:border-box}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',sans-serif;background:linear-gradient(135deg,#0a0e27 0%,#1a1f3a 50%,#0f1729 100%);color:var(--text-primary);min-height:100vh}
+      .navbar{background:rgba(15,20,25,0.6);backdrop-filter:blur(8px);border-bottom:1px solid var(--border-color)}
+      .navbar-brand{font-weight:800}
+      .sidebar{width:260px;background:rgba(26,31,53,0.6);backdrop-filter:blur(8px);position:fixed;top:60px;bottom:0;padding:1rem;border-right:1px solid var(--border-color)}
+      .content{margin-left:260px;padding:2rem}
+      .footer{padding:1rem 0;color:var(--text-secondary);margin-left:260px;text-align:center}
+      @media(max-width:768px){.sidebar{display:none}.content{margin-left:0}.footer{margin-left:0}}
+    </style>
+
+    {% block extra_styles %}{% endblock %}
+    {% block styles %}{% endblock %}
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">CityNerve Lite</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/auth">Sign In</a></li>
+            <li class="nav-item"><a class="nav-link" href="/dashboard">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="/admin">Admin</a></li>
+          </ul>
+          <form class="d-flex" onsubmit="return submitCitySearch(event)">
+            <input id="citySearchInput" class="form-control form-control-sm me-2" type="search" placeholder="Search city (e.g. Bengaluru)">
+            <button class="btn btn-sm btn-outline-light" type="submit">View</button>
+          </form>
+        </div>
+      </div>
+    </nav>
+
+    {% if session.get('username') %}
+      <aside class="sidebar d-none d-md-block">
+        <div class="mb-3 fw-bold">Navigation</div>
+        <a class="d-block mb-2 text-decoration-none text-white" href="/">Home</a>
+        <a class="d-block mb-2 text-decoration-none text-white" href="/dashboard">Dashboard</a>
+        <a class="d-block mb-2 text-decoration-none text-white" href="/admin">Analytics</a>
+        <div class="mt-4 mb-2 text-muted small">Account</div>
+        <a class="d-block text-decoration-none text-white" href="/logout">Logout</a>
+      </aside>
+    {% endif %}
+
+    <main class="content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">{{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">© {{ now.year if now is defined else '' }} CityNerve Lite — AI urban insights</footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      function submitCitySearch(e){e.preventDefault();const q=document.getElementById('citySearchInput').value.trim();if(!q) return false;window.location.href='/view/'+encodeURIComponent(q);}
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}CityNerve Lite – Dashboard{% endblock %}
+
+{% block extra_styles %}
+<style>
+    :root { --gradient-neon: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); --gradient-bar: linear-gradient(90deg, #06b6d4 0%, #8b5cf6 100%); }
+
+    .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px) saturate(130%); -webkit-backdrop-filter: blur(12px) saturate(130%); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; box-shadow: 0 12px 48px rgba(2,6,23,0.4), inset 0 1px 0 rgba(255,255,255,0.1); transition: all 0.3s cubic-bezier(0.2,0.9,0.32,1); }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 24px 60px rgba(139,92,246,0.15), inset 0 1px 0 rgba(255,255,255,0.1); }
+
+    @keyframes float-in { from { opacity: 0; transform: scale(0.8) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes glow-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes fill-bar { from { width: 0%; opacity: 0; } to { width: var(--bar-width); opacity: 1; } }
+    @keyframes shimmer { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+    .hero-score-container { position: relative; padding: 3rem 2rem; text-align: center; overflow: hidden; border-radius: 16px; background: rgba(255,255,255,0.05); backdrop-filter: blur(12px) saturate(130%); -webkit-backdrop-filter: blur(12px) saturate(130%); border: 1px solid rgba(255,255,255,0.08); margin-bottom: 3rem; }
+    .hero-score-container::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%); animation: glow-rotate 12s linear infinite; pointer-events: none; }
+
+    .hero-score { position: relative; z-index: 2; font-size: 5rem; font-weight: 900; background: var(--gradient-neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; filter: drop-shadow(0 0 30px rgba(139,92,246,0.2)); animation: float-in 0.8s ease-out; }
+    .hero-label { position: relative; z-index: 2; font-size: 1.1rem; color: var(--text-secondary); margin-top: 0.5rem; letter-spacing: 1px; text-transform: uppercase; animation: float-in 0.8s ease-out 0.1s both; }
+    .hero-subtitle { position: relative; z-index: 2; font-size: 0.95rem; color: #64748b; margin-top: 1rem; animation: float-in 0.8s ease-out 0.2s both; }
+
+    .stat-bar-group { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; animation: float-in 0.6s ease-out backwards; }
+    .stat-bar-label { font-size: 0.9rem; color: var(--text-secondary); min-width: 140px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-bar-container { flex: 1; height: 8px; background: rgba(255,255,255,0.02); border-radius: 999px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.08); }
+    .stat-bar-fill { height: 100%; background: var(--gradient-bar); border-radius: 999px; width: 0%; animation: fill-bar 1.2s cubic-bezier(0.34,1.56,0.64,1) forwards; box-shadow: 0 0 20px rgba(139,92,246,0.4); position: relative; }
+    .stat-bar-fill::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 20px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6)); animation: shimmer 2s infinite; }
+    .stat-bar-value { font-size: 0.95rem; color: #a78bfa; font-weight: 700; min-width: 50px; text-align: right; }
+
+    .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 3rem; }
+    .stat-card { text-align: center; padding: 2rem; border-radius: 16px; transition: all 0.3s ease-out; }
+    .stat-value { font-size: 2.5rem; font-weight: 900; background: var(--gradient-neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; animation: float-in 0.6s ease-out; }
+    .stat-label { font-size: 0.95rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; animation: float-in 0.6s ease-out 0.1s both; }
+
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+    .quick-action { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 2rem 1.5rem; text-align: center; border-radius: 16px; transition: all 0.3s ease-out; }
+    .quick-action-icon { font-size: 2.5rem; animation: float-in 0.6s ease-out 0.1s both; }
+    .quick-action h3 { font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary); }
+    .quick-action p { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem; }
+
+    .welcome-banner { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px) saturate(130%); -webkit-backdrop-filter: blur(12px) saturate(130%); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 12px 48px rgba(2,6,23,0.4); transition: all 0.3s ease-out; }
+    .welcome-banner:hover { transform: translateY(-4px); }
+    .welcome-title { font-size: 1.75rem; font-weight: 700; background: var(--gradient-neon); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+    .welcome-text { color: #64748b; font-size: 1rem; line-height: 1.6; }
+
+    .section-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; letter-spacing: -0.5px; color: var(--text-primary); }
+
+    @media (max-width: 768px) { 
+      .hero-score { font-size: 3.5rem; } 
+      .stat-bar-group { flex-direction: column; align-items: stretch; } 
+      .stat-bar-label { min-width: auto; } 
+      .stat-bar-value { text-align: left; margin-top: 0.5rem; } 
+      .hero-score-container { padding: 2rem 1rem; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Welcome back! 👋</h1>
+    <p class="page-subtitle">@{{ username }}</p>
+</div>
+
+<div class="welcome-banner">
+    <div class="welcome-title">🌟 Your Personal Dashboard</div>
+    <p class="welcome-text">
+        Track real-time city data, submit feedback, and monitor air quality across all regions. 
+        Your insights help us build smarter, healthier cities.
+    </p>
+</div>
+
+<!-- Quick Stats -->
+<div class="card">
+    <div class="card-body">
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-value">31</div>
+                <div class="stat-label">Cities Monitored</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">24/7</div>
+                <div class="stat-label">Live Tracking</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">∞</div>
+                <div class="stat-label">Data Points</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<h2 class="section-title">📚 Quick Actions</h2>
+<div class="card-grid">
+    <a href="/" class="card text-decoration-none">
+        <div class="quick-action">
+            <div class="quick-action-icon">🗺️</div>
+            <h3>Explore Cities</h3>
+            <p>Browse real-time city analytics and heatmaps</p>
+            <button class="btn btn-primary mt-auto">Start Exploring</button>
+        </div>
+    </a>
+
+    <a href="/admin" class="card text-decoration-none">
+        <div class="quick-action">
+            <div class="quick-action-icon">📊</div>
+            <h3>View Analytics</h3>
+            <p>Check community feedback and insights</p>
+            <button class="btn btn-primary mt-auto">See Analytics</button>
+        </div>
+    </a>
+
+    <div class="card">
+        <div class="quick-action">
+            <div class="quick-action-icon">📝</div>
+            <h3>Submit Feedback</h3>
+            <p>Share your experience and location data</p>
+            <a href="/" class="btn btn-primary mt-auto">Browse Cities</a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<!-- City Intelligence Hub (inserted by Copilot) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    :root{ --neon:#7c3aed; --neon-2:#06b6d4; --glass-bg: rgba(255,255,255,0.04); }
+    .glass { background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(10px) saturate(120%); -webkit-backdrop-filter: blur(10px) saturate(120%); box-shadow: 0 8px 40px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02); border-radius: 12px; }
+    .neon-glow { box-shadow: 0 6px 30px rgba(124,58,237,0.12), 0 0 28px rgba(6,182,212,0.06) inset; }
+    .leader-badge { background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(124,58,237,0.08)); }
+    .hover-bright:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 18px 50px rgba(9,10,31,0.6); }
+    .tiny-neon { color: var(--neon); text-shadow: 0 6px 18px rgba(124,58,237,0.12); }
+    .score-pill { background: linear-gradient(90deg,#0ea5a8,#7c3aed); color: white; padding:4px 10px; border-radius:999px; font-weight:700; font-size:0.9rem; }
+    @media (max-width:900px){ .grid-intel{ grid-template-columns: 1fr !important; } .pane-right{ margin-top: 1rem } }
+</style>
+
+<section id="city-intel-hub" class="mt-6">
+    <div class="card glass p-4 mb-6">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h3 class="mb-0" style="font-family:Inter,system-ui;">City Intelligence Hub <span class="tiny-neon small ms-2">Cinematic · Glass · AI</span></h3>
+                <div class="text-muted small">Live insights • Interactive action plans</div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-3 grid-intel" style="display:grid;grid-template-columns:360px 360px 1fr;gap:1rem;">
+            <div class="glass neon-glow p-3 hover-bright">
+                <div class="d-flex justify-content-between mb-2">
+                    <div>
+                        <div class="small text-muted">Top 3 Public-Rated Cities</div>
+                        <div class="h5 mb-0">Leaderboard</div>
+                    </div>
+                    <div class="small text-muted">Based on feedback & stability</div>
+                </div>
+                <div id="leaderboard" class="mt-2">
+                    <div class="small text-muted">Loading…</div>
+                </div>
+            </div>
+
+            <div class="glass neon-glow p-3 hover-bright">
+                <div class="d-flex justify-content-between mb-2">
+                    <div>
+                        <div class="small text-muted">Crisis Watchlist</div>
+                        <div class="h5 mb-0">Top 3 High-Risk Cities</div>
+                    </div>
+                    <div class="small text-muted">Heat, delays & stability risk</div>
+                </div>
+                <div id="watchlist" class="mt-2">
+                    <div class="small text-muted">Loading…</div>
+                </div>
+            </div>
+
+            <div class="pane-right glass p-3 neon-glow hover-bright">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <div class="small text-muted">AI Solution Generator</div>
+                        <div class="h5 mb-0">Action Plans for High-Risk Cities</div>
+                    </div>
+                    <div id="selectedCityScore" class="score-pill">—</div>
+                </div>
+                <div id="aiPanel">
+                    <div class="small text-muted mb-2">Select a city from the Watchlist to generate a context-aware plan.</div>
+                    <div id="actionPlan"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    (async function(){
+        async function fetchHeat(){ try{ const r=await fetch('/api/heat'); if(!r.ok) throw r; return await r.json(); }catch(e){console.warn(e); return null;} }
+        const data = await fetchHeat();
+        if(!data||!data.ranked){ document.getElementById('leaderboard').innerHTML='<div class="small text-danger">No data</div>'; document.getElementById('watchlist').innerHTML='<div class="small text-danger">No data</div>'; return; }
+        const ranked=data.ranked;
+        const top3=ranked.slice(0,3);
+        const highRisk=ranked.slice(-3).reverse();
+        const lb=document.getElementById('leaderboard'); lb.innerHTML='';
+        top3.forEach((c,idx)=>{ const el=document.createElement('div'); el.className='d-flex justify-content-between align-items-center p-2 leader-badge rounded mb-2'; el.innerHTML=`<div class="d-flex align-items-center"><div class="me-3 d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;border-radius:8px;background:linear-gradient(90deg,#7c3aed,#06b6d4);color:#fff;font-weight:700">${idx+1}</div><div><div class="fw-semibold">${c.city}</div><div class="small text-muted">Score ${c.score.toFixed(1)} • AQI ${c.aqi??'N/A'}</div></div></div><div class="text-end"><div class="fw-bold">${c.score.toFixed(1)}</div><div class="small text-muted">Stability</div></div>`; lb.appendChild(el); });
+        const wl=document.getElementById('watchlist'); wl.innerHTML='';
+        highRisk.forEach((c)=>{ const inequal=Math.max(1,Math.min(6,Math.round((100-c.score)/20)+(c.aqi?Math.round(c.aqi/150):0))); const card=document.createElement('div'); card.className='p-2 rounded mb-2'; card.innerHTML=`<div class="d-flex justify-content-between"><div><div class="fw-semibold">${c.city}</div><div class="small text-muted">Stress ${(100-c.score).toFixed(1)}</div></div><div class="text-end"><div class="text-danger fw-bold">${c.score.toFixed(1)}</div><div class="small text-muted">Score</div></div></div><div class="mt-2 d-flex gap-2"><div class="badge bg-warning text-dark">Inequality ≈ ${inequal}×</div><div class="small text-muted">Underserved delay factor</div></div>`; card.style.cursor='pointer'; card.addEventListener('click',()=>selectWatchCity(c,inequal)); wl.appendChild(card); });
+
+        const actionPlan=document.getElementById('actionPlan'); const scoreBadge=document.getElementById('selectedCityScore');
+        function generatePlan(cityObj,inequality){ const aqiStr=cityObj.aqi?`AQI ${cityObj.aqi}`:'AQI N/A'; function card(title,desc,bullets){return `<div class="p-3 rounded glass border mb-2"><div class="d-flex justify-content-between mb-2"><div class="fw-semibold">${title}</div><div class="small text-muted">${aqiStr}</div></div><div class="small text-muted mb-2">${desc}</div><ul class="small ms-3">${bullets.map(b=>`<li>${b}</li>`).join('')}</ul></div>`}
+            return card('Automated Emergency Rerouting',`Reduce response time in underserved zones (inequality ${inequality}×).`,['Real-time congestion detection','Dynamic route recomputation','Signal preemption for ambulances','Edge microservices for 1s recompute']) + card('Mobile Cooling Centers','Deploy temporary cooling hubs in vulnerable microzones',['Predictive placement using heat maps','Reserve mobile units & alerts','Provide water + charging + med-kit']) + card('Proactive Infra Maintenance','Fix small failures before outages',['Drone/IoT micro-inspections','Priority queueing for crews','Community reporting for silent crisis']); }
+
+        function selectWatchCity(cityObj,inequality){ scoreBadge.innerText=cityObj.score.toFixed(1); actionPlan.innerHTML=`<div class="p-2 leader-badge rounded mb-2"><div class="d-flex justify-content-between"><div><div class="fw-semibold">${cityObj.city}</div><div class="small text-muted">Predicted stress ${(100-cityObj.score).toFixed(1)} • Inequality ${inequality}×</div></div><div class="text-end"><div class="small text-muted">AI confidence</div><div class="h4 text-indigo-300">${Math.max(60,Math.round(cityObj.score))}%</div></div></div>` + generatePlan(cityObj,inequality) + `<div class="d-flex gap-2 mt-2"><button id="exportPlan" class="btn btn-primary btn-sm">Export Plan</button><button id="simulate" class="btn btn-outline-secondary btn-sm">Simulate Impact</button><div id="planNotice" class="small text-muted ms-auto">Plans are client-side suggestions.</div></div>`; document.getElementById('exportPlan').addEventListener('click',()=>{ const blob=new Blob([actionPlan.innerText],{type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`${cityObj.city}-action-plan.txt`; a.click(); URL.revokeObjectURL(url); }); document.getElementById('simulate').addEventListener('click',()=>{ const n=document.getElementById('planNotice'); n.textContent='Simulating...'; setTimeout(()=>n.textContent='Simulated: projected response time improvement ~12%.',900); }); }
+
+        if(highRisk.length) selectWatchCity(highRisk[0], Math.max(1, Math.round((100-highRisk[0].score)/20)));
+    })();
+</script>
+<h2 class="section-title">🎯 Next Steps</h2>
+<div class="card">
+    <div class="card-body">
+        <ol class="mb-0">
+            <li><strong>Explore Cities</strong> - Visit the home page to see real-time city data</li>
+            <li><strong>Select a City</strong> - Click on any city card to view detailed analytics</li>
+            <li><strong>Submit Feedback</strong> - Rate parameters and share your location & photos</li>
+            <li><strong>View Analytics</strong> - Monitor trends and community insights on the analytics page</li>
+        </ol>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Premium Dashboard: Hero Score Counter Animation & Progress Bar Width Application
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Animate hero score counter
+        const heroScore = document.querySelector('.hero-score');
+        if (heroScore) {
+            const targetScore = parseFloat(heroScore.innerText || '50.48');
+            let currentScore = 0;
+            const steps = 40;
+            const increment = targetScore / steps;
+            const stepDuration = 30; // ms per step
+            let step = 0;
+
+            const counterInterval = setInterval(() => {
+                step++;
+                currentScore = increment * step;
+                if (step >= steps) {
+                    currentScore = targetScore;
+                    clearInterval(counterInterval);
+                }
+                heroScore.innerText = currentScore.toFixed(2);
+            }, stepDuration);
+        }
+
+        // 2. Apply progress bar widths from data attributes with staggered animation
+        const statBarFills = document.querySelectorAll('.stat-bar-fill[data-width]');
+        statBarFills.forEach((bar, index) => {
+            const width = parseFloat(bar.getAttribute('data-width')) || 0;
+            bar.style.setProperty('--bar-width', width + '%');
+            // Stagger animation start by 50ms per bar
+            bar.style.animationDelay = (index * 50) + 'ms';
+        });
+
+        // 3. IntersectionObserver for lazy animation trigger (optional: if bars enter viewport)
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '50px'
+        };
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !entry.target.classList.contains('animated')) {
+                    entry.target.classList.add('animated');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe stat-bar-group containers
+        document.querySelectorAll('.stat-bar-group').forEach(group => {
+            observer.observe(group);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Feedback • {{ city }} 2080</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --secondary: #60a5fa;
+            --accent: #34d399;
+            --danger: #ef4444;
+            --success: #10b981;
+            --text-primary: #e0e7ff;
+            --text-secondary: #94a3b8;
+            --glow: rgba(139, 92, 246, 0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: radial-gradient(circle, var(--primary), rgba(139, 92, 246, 0.1));
+            border-radius: 50%;
+            animation: float linear infinite;
+            box-shadow: 0 0 10px var(--glow);
+        }
+
+        @keyframes float {
+            to {
+                transform: translateY(-100vh) translateX(var(--tx));
+                opacity: 0;
+            }
+        }
+
+        .container-feedback {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(30, 27, 59, 0.7));
+            border: 1.5px solid rgba(139, 92, 246, 0.2);
+            border-radius: 24px;
+            padding: 48px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .form-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        /* Ratings Section */
+        .parameter-card {
+            background: rgba(15, 23, 41, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .parameter-card:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.25);
+        }
+
+        .parameter-label {
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: block;
+            letter-spacing: 0.8px;
+        }
+
+        .star-rating {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            color: rgba(139, 92, 246, 0.3);
+            filter: drop-shadow(0 0 0px rgba(139, 92, 246, 0));
+        }
+
+        .star-rating label:hover {
+            color: var(--primary-light);
+            transform: scale(1.2) rotateZ(15deg);
+            filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.6));
+        }
+
+        .star-rating input:checked ~ label,
+        .star-rating label:has(~ input:checked) {
+            color: var(--primary-light);
+        }
+
+        .rating-value {
+            font-size: 12px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .rating-value.active {
+            display: block;
+        }
+
+        /* Feedback Text Section */
+        .feedback-section {
+            margin-top: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 16px;
+            background: rgba(15, 23, 41, 0.6);
+            border: 1.5px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-textarea:focus {
+            background: rgba(15, 23, 41, 0.9);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15), inset 0 0 20px rgba(139, 92, 246, 0.1);
+        }
+
+        .char-count {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            text-align: right;
+        }
+
+        /* Location Section */
+        .location-btn {
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            width: 100%;
+        }
+
+        .location-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(96, 165, 250, 0.3);
+        }
+
+        .location-status {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent);
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-top: 12px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .location-status.show {
+            display: block;
+        }
+
+        .location-map {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            margin-top: 12px;
+            display: none;
+        }
+
+        .location-map.show {
+            display: block;
+        }
+
+        /* Image Upload Section */
+        .upload-area {
+            background: rgba(15, 23, 41, 0.6);
+            border: 2px dashed rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            padding: 32px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .upload-area:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .upload-area.drag-over {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .upload-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .upload-input {
+            display: none;
+        }
+
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .image-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(15, 23, 41, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            aspect-ratio: 1;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(239, 68, 68, 0.9);
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .image-remove:hover {
+            background: rgba(239, 68, 68, 1);
+            transform: scale(1.1);
+        }
+
+        /* Submit Section */
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px var(--glow);
+        }
+
+        .btn-back {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--primary-light);
+            border: 1.5px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-back:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        @media (max-width: 640px) {
+            .form-card {
+                padding: 32px 20px;
+            }
+
+            .form-title {
+                font-size: 28px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="particles"></div>
+
+    <div class="container-feedback">
+        <div class="form-card">
+            <div class="form-header">
+                <h1 class="form-title">⭐ Rate & Review {{ city }}</h1>
+                <p class="form-subtitle">Share your experience with photos, location & feedback</p>
+            </div>
+
+            <form method="POST" id="feedbackForm" enctype="multipart/form-data">
+                <!-- Rating Section -->
+                <div class="section">
+                    <div class="section-title">📊 Rate Parameters</div>
+                    {% for param in ["traffic","pollution","cost","safety","water","healthcare","heat","responseTime"] %}
+                    <div class="parameter-card">
+                        <label class="parameter-label">
+                            {% if param == "traffic" %}🚗 Traffic Level
+                            {% elif param == "pollution" %}💨 Pollution Level
+                            {% elif param == "cost" %}💰 Living Cost
+                            {% elif param == "safety" %}🛡️ Safety
+                            {% elif param == "water" %}💧 Water Quality
+                            {% elif param == "healthcare" %}🏥 Healthcare
+                            {% elif param == "heat" %}🌡️ Climate Heat
+                            {% elif param == "responseTime" %}⚡ Response Time
+                            {% endif %}
+                        </label>
+                        <div class="star-rating">
+                            {% for i in range(1, 11) %}
+                            <input type="radio" name="{{ param }}" value="{{ i }}" id="{{ param }}_{{ i }}" required>
+                            <label for="{{ param }}_{{ i }}" data-value="{{ i }}">★</label>
+                            {% endfor %}
+                        </div>
+                        <div class="rating-value" id="{{ param }}_display"></div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Text Feedback Section -->
+                <div class="section">
+                    <div class="section-title">💬 Your Feedback</div>
+                    <div class="form-group">
+                        <label class="form-label">📝 Tell Us Your Experience</label>
+                        <textarea class="form-textarea" id="feedbackText" name="feedback_text" placeholder="Share your thoughts about this city... (optional)" maxlength="1000"></textarea>
+                        <div class="char-count"><span id="charCount">0</span>/1000</div>
+                    </div>
+                </div>
+
+                <!-- Location Section -->
+                <div class="section">
+                    <div class="section-title">📍 Location & Images</div>
+                    <div class="form-group">
+                        <button type="button" class="location-btn" id="captureLocation">📍 Capture Current Location</button>
+                        <div class="location-status" id="locationStatus"></div>
+                        <div class="location-map" id="locationMap"></div>
+                        <input type="hidden" name="location" id="locationInput">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">📸 Add Photos</label>
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">📸</div>
+                            <div class="upload-text">Drag & drop images here or click to upload (Max 5 files, 5MB each)</div>
+                        </div>
+                        <div class="image-preview" id="imagePreview"></div>
+                        <input type="file" id="imageInput" class="upload-input" accept="image/*" multiple>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-submit" id="submitBtn">✓ Submit Feedback</button>
+                    <a href="/" class="btn btn-back">← Back to Home</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Particles
+        function createParticles() {
+            const container = document.querySelector('.particles');
+            const colors = ['#8b5cf6', '#60a5fa', '#34d399', '#fbbf24'];
+            
+            for (let i = 0; i < 45; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const size = Math.random() * 4 + 1.5;
+                const duration = Math.random() * 22 + 18;
+                const tx = (Math.random() - 0.5) * 120;
+                
+                particle.style.cssText = `
+                    left: ${x}px;
+                    top: ${y}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    --tx: ${tx}px;
+                    animation-duration: ${duration}s;
+                    animation-delay: ${Math.random() * 6}s;
+                    background: radial-gradient(circle, ${colors[Math.floor(Math.random() * colors.length)]}, rgba(139, 92, 246, 0.1));
+                `;
+                container.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        // Star Rating
+        document.querySelectorAll('.star-rating label').forEach(label => {
+            label.addEventListener('click', function() {
+                const display = this.closest('.parameter-card').querySelector('.rating-value');
+                const input = document.querySelector(`#${this.getAttribute('for')}`);
+                display.textContent = `✓ ${input.value}/10`;
+                display.classList.add('active');
+            });
+        });
+
+        // Character Count
+        document.getElementById('feedbackText').addEventListener('input', (e) => {
+            document.getElementById('charCount').textContent = e.target.value.length;
+        });
+
+        // Location Capture
+        const locationBtn = document.getElementById('captureLocation');
+        const locationStatus = document.getElementById('locationStatus');
+        const locationInput = document.getElementById('locationInput');
+        const locationMapEl = document.getElementById('locationMap');
+        let map = null;
+
+        locationBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (navigator.geolocation) {
+                locationBtn.disabled = true;
+                locationBtn.textContent = '⏳ Getting location...';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+
+                        locationInput.value = JSON.stringify({lat, lng, accuracy});
+                        locationStatus.textContent = `✓ Location: ${lat.toFixed(4)}, ${lng.toFixed(4)} (±${Math.round(accuracy)}m)`;
+                        locationStatus.classList.add('show');
+                        locationBtn.textContent = '✓ Location Captured';
+                        locationBtn.disabled = false;
+
+                        // Initialize map
+                        if (!map) {
+                            map = L.map('locationMap').setView([lat, lng], 15);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                attribution: '© OpenStreetMap',
+                                maxZoom: 19
+                            }).addTo(map);
+                        } else {
+                            map.setView([lat, lng], 15);
+                            map.eachLayer((layer) => {
+                                if (layer instanceof L.Marker) map.removeLayer(layer);
+                            });
+                        }
+
+                        L.circleMarker([lat, lng], {
+                            radius: 8,
+                            fillColor: '#8b5cf6',
+                            color: '#a78bfa',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).addTo(map).bindPopup('Your Location').openPopup();
+
+                        L.circle([lat, lng], accuracy, {
+                            color: '#8b5cf6',
+                            fillColor: '#8b5cf6',
+                            fillOpacity: 0.1,
+                            weight: 1,
+                            dashArray: '5, 5'
+                        }).addTo(map);
+
+                        locationMapEl.classList.add('show');
+                    },
+                    (error) => {
+                        locationBtn.textContent = '✗ Location Failed';
+                        locationBtn.disabled = false;
+                        locationStatus.textContent = 'Could not access location. Check browser permissions.';
+                        locationStatus.classList.add('show');
+                    }
+                );
+            }
+        });
+
+        // Image Upload
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        let uploadedImages = [];
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('drag-over');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('drag-over');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('drag-over');
+            handleImages(e.dataTransfer.files);
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            handleImages(e.target.files);
+        });
+
+        function handleImages(files) {
+            if (uploadedImages.length + files.length > 5) {
+                alert('Maximum 5 images allowed');
+                return;
+            }
+
+            Array.from(files).forEach(file => {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`${file.name} is too large (max 5MB)`);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImages.push({
+                        name: file.name,
+                        data: e.target.result
+                    });
+                    renderImages();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function renderImages() {
+            imagePreview.innerHTML = uploadedImages.map((img, idx) => `
+                <div class="image-item">
+                    <img src="${img.data}" alt="${img.name}">
+                    <button type="button" class="image-remove" data-index="${idx}">✕</button>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.image-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    uploadedImages.splice(btn.dataset.index, 1);
+                    renderImages();
+                });
+            });
+        }
+
+        // Form Submission
+        document.getElementById('feedbackForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Submitting...';
+
+            // Submit the form normally
+            setTimeout(() => {
+                e.target.submit();
+            }, 800);
+        });
+    </script>
+</body>
+</html>

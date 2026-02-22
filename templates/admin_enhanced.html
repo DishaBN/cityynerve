@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard – Feedback Intelligence 2080</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-light: #a78bfa;
+            --secondary: #60a5fa;
+            --accent: #34d399;
+            --text-primary: #e0e7ff;
+            --text-secondary: #94a3b8;
+            --glow: rgba(139, 92, 246, 0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1729 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: auto;
+        }
+
+        /* Background Elements */
+        .bg-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .neural-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: radial-gradient(circle, var(--primary), rgba(139, 92, 246, 0.1));
+            border-radius: 50%;
+            animation: float linear infinite;
+            box-shadow: 0 0 10px var(--glow);
+        }
+
+        @keyframes float {
+            to {
+                transform: translateY(-100vh) translateX(var(--tx));
+                opacity: 0;
+            }
+        }
+
+        /* Header */
+        .admin-header {
+            position: relative;
+            z-index: 15;
+            padding: 50px 40px;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(30, 27, 59, 0.6));
+            border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .admin-title-section h1 {
+            font-size: 40px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .admin-subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-light);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 12px 20px;
+            border-radius: 12px;
+            background: rgba(139, 92, 246, 0.12);
+            border: 1.5px solid rgba(139, 92, 246, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(139, 92, 246, 0.25);
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px var(--glow);
+        }
+
+        /* Container */
+        .container-admin {
+            position: relative;
+            z-index: 10;
+            padding: 60px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+            animation: fadeIn 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(30, 27, 59, 0.5));
+            border: 1.5px solid rgba(139, 92, 246, 0.2);
+            border-radius: 18px;
+            padding: 28px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.15), transparent);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .stat-card:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(80, 120, 200, 0.1));
+            border-color: rgba(139, 92, 246, 0.4);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-value {
+            font-size: 40px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(30, 27, 59, 0.45));
+            border: 1.5px solid rgba(139, 92, 246, 0.2);
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(15px);
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.8s ease-out 0.4s backwards;
+        }
+
+        .table-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 28px;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.15), rgba(96, 165, 250, 0.1));
+            border-bottom: 2px solid rgba(139, 92, 246, 0.2);
+        }
+
+        th {
+            padding: 16px 14px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1.5px;
+        }
+
+        td {
+            padding: 16px 14px;
+            border-bottom: 1px solid rgba(139, 92, 246, 0.08);
+            color: #cbd5e1;
+        }
+
+        tbody tr {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        tbody tr:hover {
+            background: rgba(139, 92, 246, 0.12);
+            border-radius: 8px;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Value Styling */
+        .value-numeric {
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .city-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(96, 165, 250, 0.15));
+            color: var(--primary-light);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.3s ease;
+            text-transform: capitalize;
+        }
+
+        .city-badge:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(96, 165, 250, 0.25));
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: scale(1.05);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 40px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .empty-state-text {
+            font-size: 18px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(139, 92, 246, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 5px;
+            border: 2px solid rgba(139, 92, 246, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .admin-header {
+                padding: 40px 30px;
+            }
+
+            .admin-title-section h1 {
+                font-size: 32px;
+            }
+
+            .container-admin {
+                padding: 50px 30px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-header {
+                padding: 30px 20px;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .admin-title-section h1 {
+                font-size: 28px;
+            }
+
+            .admin-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .container-admin {
+                padding: 40px 20px;
+            }
+
+            .table-section {
+                padding: 24px;
+            }
+
+            .table-wrapper {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 12px 10px;
+                font-size: 12px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-value {
+                font-size: 32px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .admin-header {
+                padding: 20px;
+            }
+
+            .admin-title-section h1 {
+                font-size: 24px;
+            }
+
+            .container-admin {
+                padding: 20px;
+            }
+
+            .table-section {
+                padding: 16px;
+            }
+
+            table {
+                font-size: 11px;
+            }
+
+            th, td {
+                padding: 8px 6px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .stat-label {
+                font-size: 10px;
+            }
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeInFull 0.8s ease-out;
+        }
+
+        @keyframes fadeInFull {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-elements">
+        <div class="neural-grid"></div>
+        <div class="particles" id="particles"></div>
+    </div>
+
+    <!-- Header -->
+    <div class="admin-header">
+        <div class="admin-title-section">
+            <h1>📊 Admin Intelligence Hub</h1>
+            <p class="admin-subtitle">Real-Time Feedback Analytics & Reporting</p>
+        </div>
+        <div class="admin-actions">
+            <a href="/" class="back-btn">
+                ← Back to AI Command Center
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container-admin fade-in">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalRecords">0</div>
+                <div class="stat-label">Total Submissions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="uniqueCities">0</div>
+                <div class="stat-label">Cities Rated</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgScore">0</div>
+                <div class="stat-label">Avg Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="latestEntry">—</div>
+                <div class="stat-label">Latest Update</div>
+            </div>
+        </div>
+
+        <!-- Feedback Table -->
+        <div class="table-section">
+            <h2 class="table-title">📋 Feedback Submissions</h2>
+            
+            <div class="table-wrapper">
+                <table id="feedbackTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>City</th>
+                            <th>Traffic</th>
+                            <th>Pollution</th>
+                            <th>Cost</th>
+                            <th>Safety</th>
+                            <th>Water</th>
+                            <th>Healthcare</th>
+                            <th>Heat</th>
+                            <th>Response Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const colors = ['#8b5cf6', '#60a5fa', '#34d399', '#fbbf24'];
+            
+            for (let i = 0; i < 40; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const size = Math.random() * 4 + 2;
+                const duration = Math.random() * 22 + 18;
+                const tx = (Math.random() - 0.5) * 120;
+                
+                particle.style.cssText = `
+                    left: ${x}px;
+                    top: ${y}px;
+                    width: ${size}px;
+                    height: ${size}px;
+                    --tx: ${tx}px;
+                    animation-duration: ${duration}s;
+                    animation-delay: ${Math.random() * 6}s;
+                    background: radial-gradient(circle, ${colors[Math.floor(Math.random() * colors.length)]}, rgba(139, 92, 246, 0.1));
+                `;
+                container.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        // Data Processing
+        function processTableData() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            const totalRecords = rows.length;
+            
+            if (totalRecords === 0) {
+                document.getElementById('tableBody').innerHTML = `
+                    <tr>
+                        <td colspan="10" style="padding: 0; border: none;">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-text">No feedback submissions yet. Check back soon!</div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('totalRecords').textContent = '0';
+                document.getElementById('uniqueCities').textContent = '0';
+                document.getElementById('avgScore').textContent = '—';
+                return;
+            }
+
+            // Calculate stats
+            const cities = new Set();
+            let scoreSum = 0;
+            let scoreCount = 0;
+
+            rows.forEach(row => {
+                const cells = row.cells;
+                if (cells.length >= 3) {
+                    const city = cells[1].textContent;
+                    cities.add(city);
+
+                    // Calculate average of all parameters (traffic, pollution, cost, safety, water, healthcare, heat, response time)
+                    for (let i = 2; i < Math.min(10, cells.length); i++) {
+                        const val = parseInt(cells[i].textContent);
+                        if (!isNaN(val)) {
+                            scoreSum += val;
+                            scoreCount++;
+                        }
+                    }
+                }
+            });
+
+            // Update stats
+            document.getElementById('totalRecords').textContent = totalRecords;
+            document.getElementById('uniqueCities').textContent = cities.size;
+            document.getElementById('avgScore').textContent = scoreCount > 0 ? (scoreSum / scoreCount).toFixed(1) : '—';
+        }
+
+        // Format existing rows with styling
+        function stylizeTable() {
+            const tbody = document.getElementById('tableBody');
+            const rows = tbody.querySelectorAll('tr');
+
+            rows.forEach((row, idx) => {
+                const cells = row.cells;
+                
+                // Add city badge
+                if (cells[1]) {
+                    const cityName = cells[1].textContent.trim();
+                    cells[1].innerHTML = `<span class="city-badge">${cityName}</span>`;
+                }
+
+                // Style numeric values
+                for (let i = 2; i < cells.length; i++) {
+                    if (cells[i]) {
+                        cells[i].className = 'value-numeric';
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        setTimeout(() => {
+            stylizeTable();
+            processTableData();
+        }, 100);
+    </script>
+</body>
+</html>

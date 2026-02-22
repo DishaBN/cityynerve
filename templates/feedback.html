@@ -1,0 +1,463 @@
+{% extends "base.html" %}
+
+{% block title %}CityNerve Lite – Rate {{ city }}{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<style>
+    .feedback-form {
+        max-width: 700px;
+    }
+
+    .section-divider {
+        margin: 2rem 0;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .rating-group {
+        margin-bottom: 1.5rem;
+        background: rgba(26, 31, 53, 0.5);
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 3px solid var(--primary);
+    }
+
+    .rating-label {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    .star-input {
+        display: flex;
+        gap: 0.5rem;
+        /* Render radio stars so the lowest value appears on the left (1..10 left-to-right)
+           The server still uses 1..10 values; JS highlights the correct number visually. */
+        flex-direction: row-reverse;
+    }
+
+    .star-input input {
+        display: none;
+    }
+
+    .star-input label {
+        font-size: 1.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: rgba(139, 92, 246, 0.3);
+    }
+
+    .star-input label:hover {
+        color: var(--primary);
+        transform: scale(1.15);
+    }
+
+    .star-input input:checked ~ label {
+        color: var(--primary);
+    }
+
+    /* Selected star visuals (managed via JS for predictable behavior) */
+    .star-input label.selected {
+        color: var(--primary);
+    }
+
+    .upload-area {
+        border: 2px dashed var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+        background: rgba(139, 92, 246, 0.1);
+        border-color: var(--primary);
+    }
+
+    .upload-area.drag-over {
+        background: rgba(139, 92, 246, 0.15);
+        border-color: var(--primary);
+        transform: scale(1.02);
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .image-preview {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .image-item {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1;
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-remove {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: rgba(239, 68, 68, 0.9);
+        border: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        color: white;
+        cursor: pointer;
+        font-weight: 700;
+        transition: all 0.2s ease;
+    }
+
+    .image-remove:hover {
+        background: rgba(239, 68, 68, 1);
+        transform: scale(1.1);
+    }
+
+    .char-count {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        text-align: right;
+        margin-top: 0.5rem;
+    }
+
+    .location-map {
+        height: 300px;
+        border-radius: 8px;
+        border: 1.5px solid var(--border-color);
+        margin-top: 1rem;
+    }
+
+    .location-info {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: var(--accent);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">⭐ Rate {{ city }}</h1>
+    <p class="page-subtitle">Share your experience, location & photos</p>
+</div>
+
+<form method="POST" class="feedback-form" enctype="multipart/form-data" id="feedbackForm">
+    <!-- Ratings Section -->
+    <div class="section-divider">
+        <h2 class="section-title">📊 Parameter Ratings</h2>
+        
+        {% for param in ["traffic","pollution","cost","safety","water","healthcare","heat","responseTime"] %}
+        <div class="rating-group">
+            <label class="rating-label">
+                {% if param == "traffic" %}🚗 Traffic Level
+                {% elif param == "pollution" %}💨 Pollution Level
+                {% elif param == "cost" %}💰 Living Cost
+                {% elif param == "safety" %}🛡️ Safety
+                {% elif param == "water" %}💧 Water Quality
+                {% elif param == "healthcare" %}🏥 Healthcare
+                {% elif param == "heat" %}🌡️ Climate Heat
+                {% elif param == "responseTime" %}⚡ Response Time
+                {% endif %}
+            </label>
+            <div class="star-input">
+                {% for i in range(10, 0, -1) %}
+                <input type="radio" name="{{ param }}" value="{{ i }}" id="{{ param }}_{{ i }}" required>
+                <label for="{{ param }}_{{ i }}">★</label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Text Feedback -->
+    <div class="section-divider">
+        <h2 class="section-title">💬 Written Feedback</h2>
+        <div class="form-group">
+            <label class="form-label">Tell us your experience (optional)</label>
+            <textarea class="form-control" name="feedback_text" placeholder="Share your thoughts about this city..." maxlength="1000" rows="4"></textarea>
+            <div class="char-count"><span id="charCount">0</span>/1000</div>
+        </div>
+    </div>
+
+    <!-- Location -->
+    <div class="section-divider">
+        <h2 class="section-title">📍 Location & Images</h2>
+        
+        <div class="form-group">
+            <label class="form-label">Capture Current Location</label>
+            <button type="button" class="btn btn-secondary w-100" id="captureLocation">
+                📍 Capture Location
+            </button>
+            <div id="locationStatus"></div>
+            <div class="location-map" id="locationMap" style="display: none;"></div>
+            <input type="hidden" name="location" id="locationInput">
+        </div>
+
+        <!-- Image Upload -->
+        <div class="form-group">
+            <label class="form-label">Upload Photos (optional)</label>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📸</div>
+                <div style="font-weight: 600; margin-bottom: 0.5rem;">Drag & drop images here or click to upload</div>
+                <small class="text-muted">Max 5 files, 5MB each (JPG, PNG)</small>
+            </div>
+            <div class="image-preview" id="imagePreview"></div>
+            <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+        </div>
+    </div>
+
+    <!-- Submit -->
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <button type="submit" class="btn btn-primary">✓ Submit Feedback</button>
+        <a href="/view/{{ city }}" class="btn btn-secondary">← Back</a>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    let map = null;
+    let uploadedImages = [];
+
+    // Character Counter
+    document.querySelector('textarea[name="feedback_text"]').addEventListener('input', (e) => {
+        document.getElementById('charCount').textContent = e.target.value.length;
+    });
+
+    // Location Capture
+    document.getElementById('captureLocation').addEventListener('click', (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('captureLocation');
+        const statusDiv = document.getElementById('locationStatus');
+        const locationInput = document.getElementById('locationInput');
+        const mapDiv = document.getElementById('locationMap');
+
+        if (!navigator.geolocation) {
+            statusDiv.innerHTML = '<div class="alert alert-danger">Geolocation not supported</div>';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '⏳ Getting location...';
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
+
+            // Reverse geocode
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+                );
+                const data = await res.json();
+                const addr = data.address || {};
+
+                const road = addr.road || addr.residential || 'N/A';
+                const area = addr.suburb || addr.neighbourhood || addr.locality || 'N/A';
+                const city = addr.city || addr.town || 'N/A';
+                const state = addr.state || 'N/A';
+                const pincode = addr.postcode || 'N/A';
+
+                locationInput.value = JSON.stringify({lat, lng, accuracy, road, area, city, state, pincode});
+
+                statusDiv.innerHTML = `
+                    <div class="location-info">
+                        <strong>✓ Location Captured</strong><br>
+                        Area: <strong>${area}</strong> | Road: <strong>${road}</strong><br>
+                        City: <strong>${city}</strong> | State: <strong>${state}</strong> | Pincode: <strong>${pincode}</strong><br>
+                        Coords: ${lat.toFixed(4)}, ${lng.toFixed(4)} (±${Math.round(accuracy)}m)
+                    </div>
+                `;
+
+                // Initialize map
+                if (!map) {
+                    map = L.map('locationMap').setView([lat, lng], 16);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap',
+                        maxZoom: 19
+                    }).addTo(map);
+                } else {
+                    map.setView([lat, lng], 16);
+                }
+
+                L.circleMarker([lat, lng], {
+                    radius: 8,
+                    fillColor: '#8b5cf6',
+                    color: '#a78bfa',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map).bindPopup(area).openPopup();
+
+                L.circle([lat, lng], accuracy, {
+                    color: '#8b5cf6',
+                    fillColor: '#8b5cf6',
+                    fillOpacity: 0.1,
+                    weight: 1,
+                    dashArray: '5, 5'
+                }).addTo(map);
+
+                mapDiv.style.display = 'block';
+                btn.textContent = '✓ Location Captured';
+                btn.disabled = false;
+            } catch (err) {
+                statusDiv.innerHTML = '<div class="alert alert-warning">Could not get address details</div>';
+                btn.textContent = 'Capture Location';
+                btn.disabled = false;
+            }
+        }, (error) => {
+            statusDiv.innerHTML = '<div class="alert alert-danger">Location permission denied</div>';
+            btn.textContent = 'Capture Location';
+            btn.disabled = false;
+        });
+    });
+
+    // Image Upload
+    const uploadArea = document.getElementById('uploadArea');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreview = document.getElementById('imagePreview');
+
+    uploadArea.addEventListener('click', () => imageInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('drag-over');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('drag-over');
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('drag-over');
+        handleImages(e.dataTransfer.files);
+    });
+
+    imageInput.addEventListener('change', (e) => handleImages(e.target.files));
+
+    function handleImages(files) {
+        if (uploadedImages.length + files.length > 5) {
+            alert('Max 5 images allowed');
+            return;
+        }
+
+        Array.from(files).forEach(file => {
+            if (file.size > 5 * 1024 * 1024) {
+                alert(file.name + ' is too large');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                uploadedImages.push({name: file.name, data: e.target.result});
+                renderImages();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function renderImages() {
+        imagePreview.innerHTML = uploadedImages.map((img, idx) => `
+            <div class="image-item">
+                <img src="${img.data}" alt="${img.name}">
+                <button type="button" class="image-remove" onclick="uploadedImages.splice(${idx}, 1); renderImages();">✕</button>
+            </div>
+        `).join('');
+    }
+
+    // Star rating visual handling (keeps structure but fixes visual selection)
+    function initStarRatings(){
+        document.querySelectorAll('.rating-group').forEach(group=>{
+            const starBox = group.querySelector('.star-input');
+            if(!starBox) return;
+            const labels = Array.from(starBox.querySelectorAll('label'));
+            const inputs = Array.from(starBox.querySelectorAll('input'));
+
+            // Build label/value pairs and sort ascending by numeric value
+            const pairs = labels.map(l=>{
+                const forId = l.getAttribute('for') || '';
+                const parts = forId.split('_');
+                const val = parts.length>1? parseInt(parts[1],10): NaN;
+                return {label: l, val: val};
+            }).sort((a,b)=>a.val - b.val);
+
+            // Ensure a visual numeric display exists
+            let numDisplay = group.querySelector('.rating-value-display');
+            if(!numDisplay){
+                numDisplay = document.createElement('div');
+                numDisplay.className = 'rating-value-display text-muted';
+                numDisplay.style.marginLeft = 'auto';
+                numDisplay.style.fontWeight = '700';
+                group.appendChild(numDisplay);
+            }
+
+            function setSelectedByValue(v){
+                // clear
+                labels.forEach(l=>l.classList.remove('selected'));
+                // select first v labels in ascending order (these will appear left-to-right due to row-reverse)
+                for(let i=0;i<pairs.length;i++){
+                    if(i < v) pairs[i].label.classList.add('selected');
+                }
+                // show a friendly 0..5 stars numeric value alongside (v is 1..10 from radios)
+                const starVal = (v/2);
+                numDisplay.textContent = (Math.round(starVal*10)/10).toFixed(1) + '/5';
+            }
+
+            // Click handlers
+            labels.forEach(lab=>{
+                lab.addEventListener('click', (e)=>{
+                    const id = lab.getAttribute('for');
+                    const inp = document.getElementById(id);
+                    if(!inp) return;
+                    const v = parseInt(inp.value,10);
+                    // set the radio
+                    inp.checked = true;
+                    // set visuals based on numeric value
+                    setSelectedByValue(v);
+                });
+            });
+
+            // Initialize visuals from checked input if present
+            const checked = inputs.find(i=>i.checked);
+            if(checked){
+                const v = parseInt(checked.value,10);
+                setSelectedByValue(v);
+            } else {
+                // default: show 0/10
+                numDisplay.textContent = '0/10';
+            }
+        });
+    }
+
+    // Run init after DOM ready
+    document.addEventListener('DOMContentLoaded', initStarRatings);
+</script>
+{% endblock %}
